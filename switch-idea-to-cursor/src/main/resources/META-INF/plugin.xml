@@ -1,0 +1,38 @@
+<idea-plugin>
+    <id>com.gameale.massive.switch-idea-to-cursor</id>
+    <name>Switch IDEA to Cursor</name>
+    <vendor email="dev@gameale.com">Gameale</vendor>
+
+    <description><![CDATA[
+        Open the current file (and caret line/column) or project root in Cursor via the <code>cursor</code> CLI.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="com.gameale.massive.tools.cursor.OpenInCursorSettings"/>
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.gameale.massive.tools.cursor.OpenInCursorConfigurable"
+                id="com.gameale.massive.tools.cursor.OpenInCursorConfigurable"
+                displayName="Switch IDEA to Cursor"/>
+    </extensions>
+
+    <actions>
+        <action id="com.gameale.massive.tools.cursor.OpenInCursorAction"
+                class="com.gameale.massive.tools.cursor.OpenInCursorAction"
+                text="Switch to Cursor"
+                description="Switch to Cursor and open this file at the caret">
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+            <add-to-group group-id="EditorGutterPopupMenu" anchor="first"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift O"/>
+        </action>
+        <action id="com.gameale.massive.tools.cursor.OpenProjectInCursorAction"
+                class="com.gameale.massive.tools.cursor.OpenProjectInCursorAction"
+                text="Switch Project to Cursor"
+                description="Switch to Cursor and open this project root folder">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
