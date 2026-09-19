@@ -1,0 +1,39 @@
+<idea-plugin>
+    <id>com.zookeeper.browser</id>
+    <name>ZooKeeper Browser</name>
+    <vendor email="dev@gameale.com">Gameale</vendor>
+
+    <description><![CDATA[
+        Read-only ZooKeeper browser. Configure a connect string, browse the node tree,
+        and show node data as expanded JSON.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="com.zookeeper.browser.ZookeeperSettings"/>
+        <projectService serviceImplementation="com.zookeeper.browser.ZookeeperClientService"/>
+        <projectConfigurable
+                parentId="tools"
+                instance="com.zookeeper.browser.ZookeeperConfigurable"
+                id="com.zookeeper.browser.ZookeeperConfigurable"
+                displayName="ZooKeeper Browser"/>
+        <toolWindow id="ZooKeeper Browser"
+                    anchor="bottom"
+                    icon="AllIcons.Nodes.DataSchema"
+                    factoryClass="com.zookeeper.browser.ZookeeperToolWindowFactory"/>
+    </extensions>
+
+    <actions>
+        <action id="com.zookeeper.browser.OpenZookeeperBrowserAction"
+                class="com.zookeeper.browser.OpenZookeeperBrowserAction"
+                text="ZooKeeper Browser"
+                description="Open ZooKeeper Browser"
+                icon="AllIcons.Nodes.DataSchema">
+            <add-to-group group-id="MainToolbarRight" anchor="last"/>
+            <add-to-group group-id="MainToolBar" anchor="last"/>
+            <add-to-group group-id="NavBarToolBar" anchor="last"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
