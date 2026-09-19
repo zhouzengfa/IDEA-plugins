@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.EditorSettings;
 import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.editor.ex.util.LexerEditorHighlighter;
 import com.intellij.openapi.fileTypes.PlainTextFileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.ui.JBUI;
@@ -79,6 +80,7 @@ public final class JsonContentPane implements Disposable {
         settings.setAdditionalColumnsCount(0);
         if (editor instanceof EditorEx ex) {
             ex.setViewer(true);
+            ex.setHighlighter(new LexerEditorHighlighter(new JsonSyntaxHighlighter(), editor.getColorsScheme()));
         }
     }
 
