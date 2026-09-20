@@ -4,6 +4,20 @@
 
 本仓库与 `pixel_server` 无关，可单独 clone、构建、安装。
 
+## Introduction
+
+- Jump from IntelliJ IDEA to Cursor in one action.
+- Opens the current file at the same caret line and column, or opens the project root.
+- Uses the official Cursor CLI and reuses an existing Cursor window on Windows.
+
+## Features
+
+- Editor right-click **Switch to Cursor** (also on the gutter popup).
+- **Tools | Switch to Cursor**, or shortcut **Alt+Shift+O**.
+- **Tools | Switch Project to Cursor** opens the project root in Cursor.
+- Configure the `Cursor.exe` path and reuse-window behavior under **Settings | Tools | Switch IDEA to Cursor**.
+- Only local filesystem files are supported (not files inside jars or remote VFS).
+
 ## 前置条件
 
 1. 本机已安装 [Cursor](https://cursor.com/)。
@@ -34,7 +48,7 @@ cd D:\work\switch-idea-to-cursor
 .\gradlew.bat buildPlugin
 ```
 
-产物：`build\distributions\switch-idea-to-cursor-1.0.0.zip`
+产物：`build\distributions\switch-idea-to-cursor-1.0.3.zip`
 
 在 IDEA：**Settings → Plugins → ⚙ → Install Plugin from Disk…** 选择上述 zip，重启 IDE。
 

@@ -4,6 +4,21 @@
 
 Plugin id：`com.zookeeper.browser`
 
+## Introduction
+
+- A lightweight, read-only ZooKeeper browser for IntelliJ IDEA.
+- Configure a connect string, browse the node tree, and view node data as pretty-printed JSON.
+- If you find a bug or have an idea, please open an issue.
+
+## Features
+
+- Configure the connection under **Settings | Tools | ZooKeeper Browser** (connect string, root path, session timeout).
+- Use **Test** on the settings page to verify the connection.
+- Open the tool window from the toolbar, **Tools | ZooKeeper Browser**, or **View | Tool Windows | ZooKeeper Browser**.
+- Click **Connect** / refresh to load the ZooKeeper node tree.
+- Expand tree nodes to browse children; click a node to show foldable JSON on the right.
+- This version is read-only: no authentication UI, and no create / delete / ACL edits.
+
 ## 设置
 
 **Settings → Tools → ZooKeeper Browser**

@@ -4,7 +4,20 @@
     <vendor email="dev@gameale.com">Gameale</vendor>
 
     <description><![CDATA[
-        Open the current file (and caret line/column) or project root in Cursor via the <code>cursor</code> CLI.
+        <h2>Introduction</h2>
+        <ul>
+            <li>Jump from IntelliJ IDEA to Cursor in one action.</li>
+            <li>Opens the current file at the same caret line and column, or opens the project root.</li>
+            <li>Uses the official Cursor CLI and reuses an existing Cursor window on Windows.</li>
+        </ul>
+        <h2>Features</h2>
+        <ul>
+            <li>Editor right-click <b>Switch to Cursor</b> (also on the gutter popup).</li>
+            <li><b>Tools | Switch to Cursor</b>, or shortcut <b>Alt+Shift+O</b>.</li>
+            <li><b>Tools | Switch Project to Cursor</b> opens the project root in Cursor.</li>
+            <li>Configure the <code>Cursor.exe</code> path and reuse-window behavior under <b>Settings | Tools | Switch IDEA to Cursor</b>.</li>
+            <li>Only local filesystem files are supported (not files inside jars or remote VFS).</li>
+        </ul>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -22,7 +35,8 @@
         <action id="com.gameale.massive.tools.cursor.OpenInCursorAction"
                 class="com.gameale.massive.tools.cursor.OpenInCursorAction"
                 text="Switch to Cursor"
-                description="Switch to Cursor and open this file at the caret">
+                description="Switch to Cursor and open this file at the caret"
+                icon="/icons/pluginIcon.svg">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
             <add-to-group group-id="EditorGutterPopupMenu" anchor="first"/>
             <add-to-group group-id="ToolsMenu" anchor="last"/>
@@ -31,7 +45,8 @@
         <action id="com.gameale.massive.tools.cursor.OpenProjectInCursorAction"
                 class="com.gameale.massive.tools.cursor.OpenProjectInCursorAction"
                 text="Switch Project to Cursor"
-                description="Switch to Cursor and open this project root folder">
+                description="Switch to Cursor and open this project root folder"
+                icon="/icons/pluginIcon.svg">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>

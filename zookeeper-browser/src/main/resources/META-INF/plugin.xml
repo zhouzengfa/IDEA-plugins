@@ -4,8 +4,21 @@
     <vendor email="dev@gameale.com">Gameale</vendor>
 
     <description><![CDATA[
-        Read-only ZooKeeper browser. Configure a connect string, browse the node tree,
-        and show node data as expanded JSON.
+        <h2>Introduction</h2>
+        <ul>
+            <li>A lightweight, read-only ZooKeeper browser for IntelliJ IDEA.</li>
+            <li>Configure a connect string, browse the node tree, and view node data as pretty-printed JSON.</li>
+            <li>If you find a bug or have an idea, please open an issue.</li>
+        </ul>
+        <h2>Features</h2>
+        <ul>
+            <li>Configure the connection under <b>Settings | Tools | ZooKeeper Browser</b> (connect string, root path, session timeout).</li>
+            <li>Use <b>Test</b> on the settings page to verify the connection.</li>
+            <li>Open the tool window from the toolbar, <b>Tools | ZooKeeper Browser</b>, or <b>View | Tool Windows | ZooKeeper Browser</b>.</li>
+            <li>Click <b>Connect</b> / refresh to load the ZooKeeper node tree.</li>
+            <li>Expand tree nodes to browse children; click a node to show foldable JSON on the right.</li>
+            <li>This version is read-only: no authentication UI, and no create / delete / ACL edits.</li>
+        </ul>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
