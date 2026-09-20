@@ -1,6 +1,5 @@
 package com.gameale.massive.tools.cursor;
 
-import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -37,10 +36,6 @@ public final class OpenInCursorAction extends AnAction {
         }
         boolean enabled = project != null && editor != null && file != null && file.isInLocalFileSystem();
         event.getPresentation().setEnabledAndVisible(enabled);
-        if (ActionPlaces.EDITOR_POPUP.equals(event.getPlace())
-                || ActionPlaces.EDITOR_GUTTER_POPUP.equals(event.getPlace())) {
-            event.getPresentation().setIcon(null);
-        }
     }
 
     @Override

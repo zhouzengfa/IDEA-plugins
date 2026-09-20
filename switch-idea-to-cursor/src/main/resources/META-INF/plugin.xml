@@ -35,8 +35,7 @@
         <action id="com.gameale.massive.tools.cursor.OpenInCursorAction"
                 class="com.gameale.massive.tools.cursor.OpenInCursorAction"
                 text="Switch to Cursor"
-                description="Switch to Cursor and open this file at the caret"
-                icon="/icons/pluginIcon.svg">
+                description="Switch to Cursor and open this file at the caret">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
             <add-to-group group-id="EditorGutterPopupMenu" anchor="first"/>
             <add-to-group group-id="ToolsMenu" anchor="last"/>
@@ -45,8 +44,7 @@
         <action id="com.gameale.massive.tools.cursor.OpenProjectInCursorAction"
                 class="com.gameale.massive.tools.cursor.OpenProjectInCursorAction"
                 text="Switch Project to Cursor"
-                description="Switch to Cursor and open this project root folder"
-                icon="/icons/pluginIcon.svg">
+                description="Switch to Cursor and open this project root folder">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>
