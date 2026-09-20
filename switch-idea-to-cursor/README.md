@@ -48,7 +48,7 @@ cd D:\work\switch-idea-to-cursor
 .\gradlew.bat buildPlugin
 ```
 
-产物：`build\distributions\switch-idea-to-cursor-1.0.3.zip`
+产物：`build\distributions\switch-idea-to-cursor-1.0.5.zip`
 
 在 IDEA：**Settings → Plugins → ⚙ → Install Plugin from Disk…** 选择上述 zip，重启 IDE。
 

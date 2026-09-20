@@ -12,7 +12,6 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -65,10 +64,6 @@ public final class OpenInCursorAction extends AnAction {
         int column = editor.getCaretModel().getLogicalPosition().column + 1;
         String workDirectory = project.getBasePath();
 
-        try {
-            CursorCliLauncher.gotoLocation(absolutePath.toString(), line, column, workDirectory);
-        } catch (IOException ex) {
-            Messages.showErrorDialog(project, ex.getMessage(), "Switch IDEA to Cursor");
-        }
+        CursorCliLauncher.gotoLocationInBackground(project, absolutePath.toString(), line, column, workDirectory);
     }
 }

@@ -2,7 +2,10 @@ package com.gameale.massive.tools.cursor;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.SystemInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,11 +19,11 @@ import java.util.Locale;
 
 /**
  * Opens a path or file:line:column in Cursor through the official CLI.
- * On Windows, focuses the existing window first so the switch does not wait
- * for a new Electron process.
+ * On Windows, focuses a healthy existing window; if Cursor is closing, waits
+ * for that process to exit and opens the project folder so workspace config loads.
  *
  * @author zhouzengfa
- * @date 2026/03/20
+ * @date 2026/09/20
  */
 public final class CursorCliLauncher {
 
@@ -33,6 +36,14 @@ public final class CursorCliLauncher {
         switchToCursor(absolutePath, null, null, workDirectory);
     }
 
+    public static void openPathInBackground(
+            @NotNull Project project,
+            @NotNull String absolutePath,
+            @Nullable String workDirectory
+    ) {
+        runInBackground(project, () -> openPath(absolutePath, workDirectory));
+    }
+
     public static void gotoLocation(
             @NotNull String absoluteFilePath,
             int line1Based,
@@ -42,16 +53,47 @@ public final class CursorCliLauncher {
         switchToCursor(absoluteFilePath, line1Based, column1Based, workDirectory);
     }
 
+    public static void gotoLocationInBackground(
+            @NotNull Project project,
+            @NotNull String absoluteFilePath,
+            int line1Based,
+            int column1Based,
+            @Nullable String workDirectory
+    ) {
+        runInBackground(project, () -> gotoLocation(absoluteFilePath, line1Based, column1Based, workDirectory));
+    }
+
+    private static void runInBackground(@NotNull Project project, @NotNull SwitchWork work) {
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            try {
+                work.run();
+            } catch (IOException ex) {
+                ApplicationManager.getApplication().invokeLater(() ->
+                        Messages.showErrorDialog(project, ex.getMessage(), "Switch IDEA to Cursor"));
+            }
+        });
+    }
+
+    @FunctionalInterface
+    private interface SwitchWork {
+        void run() throws IOException;
+    }
+
     private static void switchToCursor(
             @NotNull String absolutePath,
             @Nullable Integer line1Based,
             @Nullable Integer column1Based,
             @Nullable String workDirectory
     ) throws IOException {
+        boolean reuseWindow = OpenInCursorSettings.getInstance().isReuseWindow();
         if (SystemInfo.isWindows) {
-            WindowsCursorSwitcher.activateRunningWindow();
+            boolean healthyWindow = WindowsCursorSwitcher.activateRunningWindow();
+            if (!healthyWindow) {
+                reuseWindow = false;
+                WindowsCursorSwitcher.waitUntilCursorProcessesExit(8_000);
+            }
         }
-        launchCli(absolutePath, line1Based, column1Based, workDirectory);
+        launchCli(absolutePath, line1Based, column1Based, workDirectory, reuseWindow);
     }
 
     public static @NotNull String resolveExecutable() throws IOException {
@@ -62,7 +104,8 @@ public final class CursorCliLauncher {
             @NotNull String absolutePath,
             @Nullable Integer line1Based,
             @Nullable Integer column1Based,
-            @Nullable String workDirectory
+            @Nullable String workDirectory,
+            boolean reuseWindow
     ) throws IOException {
         CursorInstall install = resolveInstall();
         GeneralCommandLine command = new GeneralCommandLine();
@@ -77,10 +120,11 @@ public final class CursorCliLauncher {
         if (workDirectory != null && !workDirectory.isBlank()) {
             command.setWorkDirectory(workDirectory);
         }
-        if (OpenInCursorSettings.getInstance().isReuseWindow()) {
+        if (reuseWindow) {
             command.addParameter("--reuse-window");
         }
         if (line1Based != null) {
+            addWorkspaceFolder(command, absolutePath, workDirectory);
             String target = absolutePath + ":" + line1Based + ":" + (column1Based == null ? 1 : column1Based);
             command.addParameters("-g", target);
         } else {
@@ -91,6 +135,21 @@ public final class CursorCliLauncher {
             command.createProcess();
         } catch (ExecutionException e) {
             throw new IOException(e.getMessage(), e);
+        }
+    }
+
+    private static void addWorkspaceFolder(
+            @NotNull GeneralCommandLine command,
+            @NotNull String absolutePath,
+            @Nullable String workDirectory
+    ) {
+        if (workDirectory == null || workDirectory.isBlank()) {
+            return;
+        }
+        Path folder = Path.of(workDirectory).toAbsolutePath().normalize();
+        Path file = Path.of(absolutePath).toAbsolutePath().normalize();
+        if (!folder.equals(file)) {
+            command.addParameter(folder.toString());
         }
     }
 

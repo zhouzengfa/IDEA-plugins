@@ -8,62 +8,39 @@ import com.sun.jna.Pointer;
 import com.sun.jna.win32.StdCallLibrary;
 import com.sun.jna.win32.W32APIOptions;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.HashSet;
-import java.util.Set;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Brings an already-running Cursor window to the foreground on Windows.
  * Avoids waiting for a new Cursor.exe / Electron process to steal focus.
  *
  * @author zhouzengfa
- * @date 2026/03/20
+ * @date 2026/09/20
  */
 final class WindowsCursorSwitcher {
 
     private static final Logger LOG = Logger.getInstance(WindowsCursorSwitcher.class);
     private static final int SW_RESTORE = 9;
     private static final int ASFW_ANY = -1;
+    private static final int WM_NULL = 0;
+    private static final int SMTO_ABORTIFHUNG = 0x0002;
+    private static final int RESPONSIVE_TIMEOUT_MS = 300;
+    private static final long SHUTDOWN_POLL_MS = 150;
+    private static final long IPC_SETTLE_MS = 200;
 
     private WindowsCursorSwitcher() {
     }
 
+    /**
+     * Focuses a healthy Cursor window. Returns false if none exists or it is closing.
+     */
     static boolean activateRunningWindow() {
         try {
-            Set<Integer> cursorPids = findCursorPids();
-            if (cursorPids.isEmpty()) {
+            Pointer hwnd = findVisibleCursorWindow();
+            if (hwnd == null || !isResponsive(hwnd)) {
                 return false;
             }
-            Pointer[] found = new Pointer[1];
-            User32Lib.WndEnumProc callback = (hWnd, lParam) -> {
-                if (!User32Lib.INSTANCE.IsWindowVisible(hWnd)) {
-                    return true;
-                }
-                int[] pid = new int[1];
-                User32Lib.INSTANCE.GetWindowThreadProcessId(hWnd, pid);
-                if (!cursorPids.contains(pid[0])) {
-                    return true;
-                }
-                char[] title = new char[512];
-                int length = User32Lib.INSTANCE.GetWindowTextW(hWnd, title, title.length);
-                if (length <= 0) {
-                    return true;
-                }
-                String text = new String(title, 0, length);
-                if (text.contains(" - Cursor") || text.endsWith("Cursor")) {
-                    found[0] = hWnd;
-                    return false;
-                }
-                if (found[0] == null) {
-                    found[0] = hWnd;
-                }
-                return true;
-            };
-            User32Lib.INSTANCE.EnumWindows(callback, null);
-            if (found[0] == null) {
-                return false;
-            }
-            focusWindow(found[0]);
+            focusWindow(hwnd);
             return true;
         } catch (Throwable t) {
             LOG.warn("Failed to activate existing Cursor window", t);
@@ -71,15 +48,71 @@ final class WindowsCursorSwitcher {
         }
     }
 
-    private static @NotNull Set<Integer> findCursorPids() {
-        Set<Integer> pids = new HashSet<>();
+    /**
+     * Waits until leftover Cursor.exe processes exit so CLI does not talk to a dying instance.
+     * No-op if Cursor is not running. Must run off the EDT.
+     */
+    static void waitUntilCursorProcessesExit(long timeoutMs) {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        boolean sawProcess = false;
+        while (System.currentTimeMillis() < deadline) {
+            if (!isCursorProcessRunning()) {
+                if (sawProcess) {
+                    sleepQuietly(IPC_SETTLE_MS);
+                }
+                return;
+            }
+            sawProcess = true;
+            sleepQuietly(SHUTDOWN_POLL_MS);
+        }
+        LOG.warn("Timed out waiting for Cursor.exe to exit");
+    }
+
+    private static @Nullable Pointer findVisibleCursorWindow() {
+        Pointer[] found = new Pointer[1];
+        User32Lib.WndEnumProc callback = (hWnd, lParam) -> {
+            if (!User32Lib.INSTANCE.IsWindowVisible(hWnd)) {
+                return true;
+            }
+            char[] title = new char[512];
+            int length = User32Lib.INSTANCE.GetWindowTextW(hWnd, title, title.length);
+            if (length <= 0) {
+                return true;
+            }
+            String text = new String(title, 0, length);
+            if (text.contains(" - Cursor") || text.endsWith("Cursor")) {
+                found[0] = hWnd;
+                return false;
+            }
+            return true;
+        };
+        User32Lib.INSTANCE.EnumWindows(callback, null);
+        return found[0];
+    }
+
+    private static boolean isResponsive(@NotNull Pointer hwnd) {
+        int[] result = new int[1];
+        int sent = User32Lib.INSTANCE.SendMessageTimeoutW(
+                hwnd, WM_NULL, 0, 0, SMTO_ABORTIFHUNG, RESPONSIVE_TIMEOUT_MS, result);
+        return sent != 0;
+    }
+
+    private static boolean isCursorProcessRunning() {
         for (ProcessInfo info : OSProcessUtil.getProcessList()) {
             String name = info.getExecutableName();
             if (name != null && name.equalsIgnoreCase("Cursor.exe")) {
-                pids.add(info.getPid());
+                return true;
             }
         }
-        return pids;
+        return false;
+    }
+
+    private static void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static void focusWindow(@NotNull Pointer hwnd) {
@@ -130,5 +163,15 @@ final class WindowsCursorSwitcher {
         int GetWindowThreadProcessId(Pointer hWnd, int[] lpdwProcessId);
 
         int GetWindowTextW(Pointer hWnd, char[] lpString, int nMaxCount);
+
+        int SendMessageTimeoutW(
+                Pointer hWnd,
+                int msg,
+                int wParam,
+                int lParam,
+                int fuFlags,
+                int uTimeout,
+                int[] lpdwResult
+        );
     }
 }

@@ -7,7 +7,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -41,10 +40,6 @@ public final class OpenProjectInCursorAction extends AnAction {
             return;
         }
         Path root = Path.of(basePath).toAbsolutePath().normalize();
-        try {
-            CursorCliLauncher.openPath(root.toString(), root.toString());
-        } catch (IOException ex) {
-            Messages.showErrorDialog(project, ex.getMessage(), "Switch IDEA to Cursor");
-        }
+        CursorCliLauncher.openPathInBackground(project, root.toString(), root.toString());
     }
 }
