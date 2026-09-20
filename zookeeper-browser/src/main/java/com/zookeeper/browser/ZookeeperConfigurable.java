@@ -31,6 +31,7 @@ public final class ZookeeperConfigurable implements Configurable {
 
     private final Project project;
     private JBTextField connectStringField;
+    private JBTextField pathField;
     private JBTextField sessionTimeoutField;
     private JButton testButton;
     private JBLabel testResultLabel;
@@ -47,6 +48,7 @@ public final class ZookeeperConfigurable implements Configurable {
     @Override
     public @Nullable JComponent createComponent() {
         connectStringField = new JBTextField();
+        pathField = new JBTextField();
         sessionTimeoutField = new JBTextField();
         testButton = new JButton("Test");
         testResultLabel = new JBLabel("Click Test to verify the connect string.");
@@ -61,6 +63,7 @@ public final class ZookeeperConfigurable implements Configurable {
 
         JPanel panel = FormBuilder.createFormBuilder()
                 .addLabeledComponent("Connect string:", connectRow, 1, false)
+                .addLabeledComponent("Path (empty = all):", pathField, 1, false)
                 .addLabeledComponent("Session timeout (ms):", sessionTimeoutField, 1, false)
                 .addComponent(testResultLabel, 8)
                 .addComponentFillVertically(new JPanel(), 0)
@@ -74,6 +77,7 @@ public final class ZookeeperConfigurable implements Configurable {
     public boolean isModified() {
         ZookeeperSettings settings = ZookeeperSettings.getInstance(project);
         return !connectStringField.getText().trim().equals(settings.getConnectString())
+                || !pathField.getText().trim().equals(settings.getPath())
                 || parseTimeout(sessionTimeoutField.getText()) != settings.getSessionTimeoutMs();
     }
 
@@ -85,6 +89,7 @@ public final class ZookeeperConfigurable implements Configurable {
         }
         ZookeeperSettings settings = ZookeeperSettings.getInstance(project);
         settings.setConnectString(connectStringField.getText().trim());
+        settings.setPath(pathField.getText().trim());
         settings.setSessionTimeoutMs(timeout);
     }
 
@@ -92,6 +97,7 @@ public final class ZookeeperConfigurable implements Configurable {
     public void reset() {
         ZookeeperSettings settings = ZookeeperSettings.getInstance(project);
         connectStringField.setText(settings.getConnectString());
+        pathField.setText(settings.getPath());
         sessionTimeoutField.setText(String.valueOf(settings.getSessionTimeoutMs()));
     }
 
@@ -105,7 +111,7 @@ public final class ZookeeperConfigurable implements Configurable {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 try {
-                    ZookeeperClientService.testConnection(connectString, timeout);
+                    ZookeeperClientService.testConnection(connectString, timeout, pathField.getText());
                     ApplicationManager.getApplication().invokeLater(() -> showTestResult(true, "Connect string is correct. Connected to " + connectString));
                 } catch (Exception ex) {
                     String reason = ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();

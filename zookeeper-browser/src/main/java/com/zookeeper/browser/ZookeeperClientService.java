@@ -40,16 +40,30 @@ public final class ZookeeperClientService implements Disposable {
     public synchronized void connect() throws IOException, InterruptedException {
         disconnect();
         ZookeeperSettings settings = ZookeeperSettings.getInstance(project);
-        zooKeeper = openSession(settings.getConnectString(), settings.getSessionTimeoutMs());
+        ZooKeeper zk = openSession(settings.getConnectString(), settings.getSessionTimeoutMs());
+        try {
+            ensurePath(zk, settings.normalizedPath());
+        } catch (IOException e) {
+            closeQuietly(zk);
+            throw e;
+        }
+        zooKeeper = zk;
     }
 
     /**
-     * Tries the given connect string and closes the session. Does not change the browser session.
+     * Tries the given connect string (and optional path) then closes the session.
      */
-    public static void testConnection(@NotNull String connectString, int sessionTimeoutMs)
-            throws IOException, InterruptedException {
+    public static void testConnection(
+            @NotNull String connectString,
+            int sessionTimeoutMs,
+            @NotNull String path
+    ) throws IOException, InterruptedException {
         ZooKeeper zk = openSession(connectString, sessionTimeoutMs);
-        closeQuietly(zk);
+        try {
+            ensurePath(zk, ZookeeperSettings.normalizePath(path));
+        } finally {
+            closeQuietly(zk);
+        }
     }
 
     private static @NotNull ZooKeeper openSession(@NotNull String connectString, int sessionTimeoutMs)
@@ -122,6 +136,21 @@ public final class ZookeeperClientService implements Disposable {
         }
         String text = new String(data, StandardCharsets.UTF_8);
         return JsonPretty.expand(text);
+    }
+
+    private static void ensurePath(@NotNull ZooKeeper zk, @NotNull String path) throws IOException {
+        if ("/".equals(path)) {
+            return;
+        }
+        try {
+            if (zk.exists(path, false) == null) {
+                throw new IOException("Path not found: " + path);
+            }
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IOException(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage(), e);
+        }
     }
 
     private @NotNull ZooKeeper requireOpen() throws IOException {

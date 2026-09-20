@@ -41,8 +41,7 @@ public final class ZookeeperBrowserPanel implements Disposable {
     private final JBLabel statusLabel = new JBLabel("Disconnected");
     private final JButton connectButton = new JButton("Connect");
     private final JButton disconnectButton = new JButton("Disconnect");
-    private final DefaultMutableTreeNode treeRoot = new ZkNode("/", "/");
-    private final DefaultTreeModel treeModel = new DefaultTreeModel(treeRoot);
+    private final DefaultTreeModel treeModel = new DefaultTreeModel(new ZkNode("/", "/"));
     private final Tree tree = new Tree(treeModel);
     private final JsonContentPane contentPane;
 
@@ -108,7 +107,8 @@ public final class ZookeeperBrowserPanel implements Disposable {
                     SwingUtilities.invokeLater(() -> {
                         setConnected(true);
                         resetTree();
-                        statusLabel.setText("Connected: " + ZookeeperSettings.getInstance(project).getConnectString());
+                        statusLabel.setText("Connected: " + ZookeeperSettings.getInstance(project).getConnectString()
+                                + "  " + ZookeeperSettings.getInstance(project).normalizedPath());
                     });
                 } catch (Exception ex) {
                     SwingUtilities.invokeLater(() -> {
@@ -130,12 +130,13 @@ public final class ZookeeperBrowserPanel implements Disposable {
     }
 
     private void resetTree() {
-        treeRoot.removeAllChildren();
+        String path = ZookeeperSettings.getInstance(project).normalizedPath();
+        ZkNode rootNode = new ZkNode(ZookeeperSettings.displayName(path), path);
         if (ZookeeperClientService.getInstance(project).isConnected()) {
-            treeRoot.add(new PlaceholderNode());
+            rootNode.add(new PlaceholderNode());
         }
-        treeModel.reload(treeRoot);
-        tree.collapsePath(new TreePath(treeRoot.getPath()));
+        treeModel.setRoot(rootNode);
+        tree.collapsePath(new TreePath(rootNode.getPath()));
     }
 
     private void loadChildren(@NotNull ZkNode node) {

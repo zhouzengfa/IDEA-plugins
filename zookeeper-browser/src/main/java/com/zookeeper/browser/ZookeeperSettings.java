@@ -19,6 +19,7 @@ public final class ZookeeperSettings implements PersistentStateComponent<Zookeep
 
     public static final class State {
         public String connectString = "127.0.0.1:2181";
+        public String path = "";
         public int sessionTimeoutMs = 10_000;
     }
 
@@ -34,6 +35,43 @@ public final class ZookeeperSettings implements PersistentStateComponent<Zookeep
 
     public void setConnectString(@NotNull String connectString) {
         state.connectString = connectString;
+    }
+
+    public @NotNull String getPath() {
+        return state.path == null ? "" : state.path;
+    }
+
+    public void setPath(@NotNull String path) {
+        state.path = path;
+    }
+
+    /**
+     * Empty path means all nodes from {@code /}.
+     */
+    public @NotNull String normalizedPath() {
+        return normalizePath(getPath());
+    }
+
+    public static @NotNull String normalizePath(@NotNull String raw) {
+        String path = raw.trim();
+        if (path.isEmpty() || "/".equals(path)) {
+            return "/";
+        }
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        while (path.length() > 1 && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        return path;
+    }
+
+    public static @NotNull String displayName(@NotNull String path) {
+        if ("/".equals(path)) {
+            return "/";
+        }
+        int slash = path.lastIndexOf('/');
+        return path.substring(slash + 1);
     }
 
     public int getSessionTimeoutMs() {
