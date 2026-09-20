@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.zookeeper.browser"
-version = "1.0.10"
+version = "1.0.11"
 
 repositories {
     mavenCentral()
@@ -34,7 +34,7 @@ intellij {
 tasks {
     patchPluginXml {
         sinceBuild.set("233")
-        untilBuild.set("262.*")
+        untilBuild.set("")
     }
 
     buildSearchableOptions {
