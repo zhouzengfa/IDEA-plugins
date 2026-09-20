@@ -66,7 +66,7 @@ cd E:\plan\IDEA-plugins\zookeeper-browser
 
 从 IDEA 打开 Cursor，并跳到当前文件的光标行/列，或打开工程根目录。
 
-产物：`switch-idea-to-cursor/build/distributions/switch-idea-to-cursor-1.0.1.zip`（以本地 `build.gradle.kts` 的 `version` 为准）
+产物：`switch-idea-to-cursor/build/distributions/switch-idea-to-cursor-1.0.2.zip`
 
 ### 入口
 
