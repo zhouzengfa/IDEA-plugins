@@ -1,14 +1,13 @@
 package com.zookeeper.browser;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.Configurable;
+import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.JBColor;
-import com.intellij.ui.components.JBLabel;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.JBUI;
@@ -34,7 +33,6 @@ public final class ZookeeperConfigurable implements Configurable {
     private JBTextField pathField;
     private JBTextField sessionTimeoutField;
     private JButton testButton;
-    private JBLabel testResultLabel;
 
     public ZookeeperConfigurable(@NotNull Project project) {
         this.project = project;
@@ -51,21 +49,18 @@ public final class ZookeeperConfigurable implements Configurable {
         pathField = new JBTextField();
         sessionTimeoutField = new JBTextField();
         testButton = new JButton("Test");
-        testResultLabel = new JBLabel("Click Test to verify the connect string.");
-        testResultLabel.setForeground(JBColor.GRAY);
         testButton.addActionListener(e -> testConnection());
         connectStringField.addActionListener(e -> testConnection());
         sessionTimeoutField.addActionListener(e -> testConnection());
 
         JPanel connectRow = new JPanel(new BorderLayout(8, 0));
-        connectRow.add(testButton, BorderLayout.WEST);
         connectRow.add(connectStringField, BorderLayout.CENTER);
+        connectRow.add(testButton, BorderLayout.EAST);
 
         JPanel panel = FormBuilder.createFormBuilder()
                 .addLabeledComponent("Connect string:", connectRow, 1, false)
                 .addLabeledComponent("Path (empty = all):", pathField, 1, false)
                 .addLabeledComponent("Session timeout (ms):", sessionTimeoutField, 1, false)
-                .addComponent(testResultLabel, 8)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
         panel.setBorder(JBUI.Borders.empty(8, 0));
@@ -104,27 +99,46 @@ public final class ZookeeperConfigurable implements Configurable {
     private void testConnection() {
         String connectString = connectStringField.getText().trim();
         int timeout = parseTimeout(sessionTimeoutField.getText());
+        String title = "Connection to " + hostLabel(connectString);
         testButton.setEnabled(false);
-        testResultLabel.setForeground(JBColor.GRAY);
-        testResultLabel.setText("Connecting...");
         ProgressManager.getInstance().run(new Task.Backgroundable(project, "Testing ZooKeeper connection", false) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 try {
                     ZookeeperClientService.testConnection(connectString, timeout, pathField.getText());
-                    ApplicationManager.getApplication().invokeLater(() -> showTestResult(true, "Connect string is correct. Connected to " + connectString));
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        testButton.setEnabled(true);
+                        Messages.showMessageDialog(
+                                connectStringField,
+                                "Successfully connected!",
+                                title,
+                                Messages.getInformationIcon()
+                        );
+                    });
                 } catch (Exception ex) {
                     String reason = ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
-                    ApplicationManager.getApplication().invokeLater(() -> showTestResult(false, reason));
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        testButton.setEnabled(true);
+                        Messages.showMessageDialog(
+                                connectStringField,
+                                reason,
+                                title,
+                                Messages.getErrorIcon()
+                        );
+                    });
                 }
             }
         });
     }
 
-    private void showTestResult(boolean ok, @NotNull String message) {
-        testButton.setEnabled(true);
-        testResultLabel.setForeground(ok ? new JBColor(0x2E7D32, 0x81C784) : JBColor.RED);
-        testResultLabel.setText(ok ? message : "Cannot connect: " + message);
+    private static @NotNull String hostLabel(@NotNull String connectString) {
+        if (connectString.isEmpty()) {
+            return "ZooKeeper";
+        }
+        int comma = connectString.indexOf(',');
+        String first = comma < 0 ? connectString : connectString.substring(0, comma);
+        int colon = first.lastIndexOf(':');
+        return colon < 0 ? first : first.substring(0, colon);
     }
 
     private static int parseTimeout(@NotNull String text) {

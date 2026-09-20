@@ -11,7 +11,7 @@ Plugin id：`com.zookeeper.browser`
 - **Connect string**：`127.0.0.1:2181` 或 `host1:2181,host2:2181,host3:2181`
 - **Path**：例如 `/zhouzengfa`，只看该节点及其子节点；留空则从 `/` 看全部
 - **Session timeout (ms)**：默认 `10000`
-- 左侧 **Test**（或在输入框按 Enter）：真正去连 ZooKeeper。成功显示 “Connect string is correct”；失败在同一行给出原因。
+- 连接串右侧 **Test**：弹出对话框。成功显示 Successfully connected!；失败显示原因。
 
 按工程保存。
 
